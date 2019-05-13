@@ -182,12 +182,15 @@ def pkgbuild(pkgroot, plist, identifier, version, script_dir, output_path):
     run_cmd(cmd)
 
 
-def productbuild(distribution, pkg_path, output_path):
+def productbuild(distribution, pkg_path, output_path, script_dir=None):
     '''Builds a product pkg from a product root and distribution file'''
     cmd = [PRODUCTBUILD,
            '--distribution', distribution,
-           '--package-path', pkg_path,
-           output_path]
+           '--package-path', pkg_path]
+    if script_dir:
+            cmd.append('--scripts')
+            cmd.append(script_dir)
+    cmd.append(output_path)
     run_cmd(cmd)
 
 
@@ -503,9 +506,15 @@ def main():
         final_pkg = os.path.join(os.getcwd(),
                                  '%s-%s.pkg' % (outfilename, munki_version))
         print "Building output pkg at %s..." % final_pkg
+        # Find out if we have a Scripts dir
+        script_dir = None
+        potential_scripts = os.path.join(root_dir, 'Scripts')
+        if os.path.isdir(potential_scripts):
+            script_dir = potential_scripts
         productbuild(distfile,
                      newroot,
-                     final_pkg)
+                     final_pkg,
+                     script_dir)
 
         if args.sign_package:
             sign_package(args.sign_package, final_pkg)
